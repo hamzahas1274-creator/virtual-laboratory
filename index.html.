@@ -1,0 +1,240 @@
+# virtual-laboratory
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Lab Fisika - Getaran, Gelombang, & Cahaya</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+    body { background-color: #f0f4f8; color: #333; }
+    
+    /* Header Navigation */
+    header { background: #0284c7; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { font-size: 1.2rem; }
+    
+    /* Container Pages */
+    .page { display: none; padding: 20px; max-width: 900px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    /* Dashboard UI */
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+    .card { background: white; border-radius: 12px; padding: 25px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
+    .card:hover { border-color: #0284c7; transform: translateY(-3px); }
+    .card h3 { color: #0284c7; margin-bottom: 10px; }
+
+    /* Simulation Layout */
+    .lab-layout { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 15px; }
+    .canvas-container { flex: 1; min-width: 300px; background: #0f172a; border-radius: 8px; display: flex; justify-content: center; align-items: center; height: 350px; }
+    .controls { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 15px; }
+    .control-group { background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    label { font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 5px; color: #475569; }
+    input[type=range], select { width: 100%; padding: 6px; margin-top: 5px; }
+    
+    /* Buttons */
+    .btn { padding: 10px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn-primary { background: #0284c7; color: white; }
+    .btn-back { background: #64748b; color: white; margin-bottom: 15px; }
+    
+    /* Output Data */
+    .data-panel { margin-top: 20px; background: #e0f2fe; padding: 15px; border-radius: 8px; border-left: 5px solid #0284c7; }
+    .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 8px; }
+    .data-card { background: white; padding: 10px; border-radius: 6px; text-align: center; }
+    .data-value { font-size: 1.1rem; font-weight: bold; color: #0369a1; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Virtual Lab Fisika (Skripsi)</h1>
+    <span>Materi: Getaran, Gelombang, & Cahaya</span>
+  </header>
+
+  <!-- 1. HALAMAN DASHBOARD MAIN MENU -->
+  <div id="page-dashboard" class="page active">
+    <h2>Pilih Modul Praktikum</h2>
+    <p style="color: #64748b; margin-top: 5px;">Silakan pilih materi eksperimen yang ingin disimulasikan:</p>
+    
+    <div class="menu-grid">
+      <div class="card" onclick="switchPage('page-pendulum')">
+        <h3>1. Getaran & Gelombang</h3>
+        <p>Eksperimen Ayunan Pendulum Sederhana (Periode & Frekuensi)</p>
+      </div>
+      <div class="card" onclick="switchPage('page-cahaya')">
+        <h3>2. Pembiasan Cahaya</h3>
+        <p>Simulasi Hukum Snellius & Indeks Bias Medium Transparan</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. HALAMAN SIMULASI GETARAN (PENDULUM) -->
+  <div id="page-pendulum" class="page">
+    <button class="btn btn-back" onclick="switchPage('page-dashboard')">← Kembali ke Menu</button>
+    <h2>Simulasi 1: Getaran Pendulum Sederhana</h2>
+    
+    <div class="lab-layout">
+      <div class="canvas-container">
+        <canvas id="canvasPendulum" width="350" height="330"></canvas>
+      </div>
+      <div class="controls">
+        <div class="control-group">
+          <label>Panjang Tali (L): <span id="valL">1.0</span> m</label>
+          <input type="range" id="inputL" min="0.2" max="2.0" step="0.1" value="1.0">
+        </div>
+        <div class="control-group">
+          <label>Gravitasi (g): <span id="valG">9.8</span> m/s²</label>
+          <input type="range" id="inputG" min="1.6" max="20.0" step="0.1" value="9.8">
+        </div>
+        <button class="btn btn-primary" id="btnPlayPendulum">Mulai / Jeda Animation</button>
+      </div>
+    </div>
+
+    <div class="data-panel">
+      <h3>Data Hasil Ukur</h3>
+      <div class="data-grid">
+        <div class="data-card"><div>Periode (T)</div><div class="data-value" id="outT">0.00 s</div></div>
+        <div class="data-card"><div>Frekuensi (f)</div><div class="data-value" id="outF">0.00 Hz</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. HALAMAN SIMULASI CAHAYA (PEMBIASAN) -->
+  <div id="page-cahaya" class="page">
+    <button class="btn btn-back" onclick="switchPage('page-dashboard')">← Kembali ke Menu</button>
+    <h2>Simulasi 2: Pembiasan Cahaya (Hukum Snellius)</h2>
+    
+    <div class="lab-layout">
+      <div class="canvas-container">
+        <canvas id="canvasCahaya" width="350" height="330"></canvas>
+      </div>
+      <div class="controls">
+        <div class="control-group">
+          <label>Sudut Datang (θ₁): <span id="valTheta1">45</span>°</label>
+          <input type="range" id="inputTheta1" min="0" max="80" value="45">
+        </div>
+        <div class="control-group">
+          <label>Medium 2 (Bawah):</label>
+          <select id="selectMedium">
+            <option value="1.33">Air (n = 1.33)</option>
+            <option value="1.50">Kaca (n = 1.50)</option>
+            <option value="2.42">Intan (n = 2.42)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-panel">
+      <h3>Data Hasil Ukur Pembiasan</h3>
+      <div class="data-grid">
+        <div class="data-card"><div>Sudut Datang (θ₁)</div><div class="data-value" id="outTheta1">45°</div></div>
+        <div class="data-card"><div>Sudut Bias (θ₂)</div><div class="data-value" id="outTheta2">0.0°</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // System Navigasi Halaman
+    function switchPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+    }
+
+    // --- LOGIKA SIMULASI 1: PENDULUM ---
+    const canvasP = document.getElementById('canvasPendulum');
+    const ctxP = canvasP.getContext('2d');
+    let L = 1.0, g = 9.8, angle = 0.3, angleVel = 0, isPendulumRunning = false;
+
+    document.getElementById('inputL').addEventListener('input', (e) => {
+      L = parseFloat(e.target.value);
+      document.getElementById('valL').innerText = L;
+      updatePendulumData();
+    });
+    document.getElementById('inputG').addEventListener('input', (e) => {
+      g = parseFloat(e.target.value);
+      document.getElementById('valG').innerText = g;
+      updatePendulumData();
+    });
+    document.getElementById('btnPlayPendulum').addEventListener('click', () => {
+      isPendulumRunning = !isPendulumRunning;
+    });
+
+    function updatePendulumData() {
+      const T = 2 * Math.PI * Math.sqrt(L / g);
+      document.getElementById('outT').innerText = T.toFixed(2) + " s";
+      document.getElementById('outF').innerText = (1 / T).toFixed(2) + " Hz";
+    }
+
+    function drawPendulum() {
+      ctxP.clearRect(0, 0, canvasP.width, canvasP.height);
+      if (isPendulumRunning) {
+        let accel = (-1 * g / (L * 150)) * Math.sin(angle);
+        angleVel += accel;
+        angle += angleVel;
+      }
+
+      const x = 175 + (L * 100) * Math.sin(angle);
+      const y = 30 + (L * 100) * Math.cos(angle);
+
+      ctxP.beginPath(); ctxP.moveTo(175, 30); ctxP.lineTo(x, y);
+      ctxP.strokeStyle = 'white'; ctxP.lineWidth = 2; ctxP.stroke();
+      ctxP.beginPath(); ctxP.arc(x, y, 15, 0, Math.PI * 2);
+      ctxP.fillStyle = '#38bdf8'; ctxP.fill();
+
+      requestAnimationFrame(drawPendulum);
+    }
+
+    // --- LOGIKA SIMULASI 2: CAHAYA ---
+    const canvasC = document.getElementById('canvasCahaya');
+    const ctxC = canvasC.getContext('2d');
+    let theta1 = 45, n1 = 1.0, n2 = 1.33;
+
+    document.getElementById('inputTheta1').addEventListener('input', (e) => {
+      theta1 = parseFloat(e.target.value);
+      document.getElementById('valTheta1').innerText = theta1;
+      drawCahaya();
+    });
+    document.getElementById('selectMedium').addEventListener('change', (e) => {
+      n2 = parseFloat(e.target.value);
+      drawCahaya();
+    });
+
+    function drawCahaya() {
+      ctxC.clearRect(0, 0, canvasC.width, canvasC.height);
+
+      // Draw Medium Bawah
+      ctxC.fillStyle = 'rgba(56, 189, 248, 0.3)';
+      ctxC.fillRect(0, 165, 350, 165);
+
+      // Normal Line
+      ctxC.beginPath(); ctxC.setLineDash([5, 5]); ctxC.moveTo(175, 20); ctxC.lineTo(175, 310);
+      ctxC.strokeStyle = '#94a3b8'; ctxC.stroke(); ctxC.setLineDash([]);
+
+      // Calculate Refraction Angle (Snellius Law: n1*sin(t1) = n2*sin(t2))
+      let rad1 = theta1 * Math.PI / 180;
+      let sinTheta2 = (n1 * Math.sin(rad1)) / n2;
+      let theta2 = Math.asin(sinTheta2);
+
+      // Incident Ray (Sinar Datang)
+      let x1 = 175 - 120 * Math.sin(rad1);
+      let y1 = 165 - 120 * Math.cos(rad1);
+      ctxC.beginPath(); ctxC.moveTo(x1, y1); ctxC.lineTo(175, 165);
+      ctxC.strokeStyle = '#ef4444'; ctxC.lineWidth = 3; ctxC.stroke();
+
+      // Refracted Ray (Sinar Bias)
+      let x2 = 175 + 120 * Math.sin(theta2);
+      let y2 = 165 + 120 * Math.cos(theta2);
+      ctxC.beginPath(); ctxC.moveTo(175, 165); ctxC.lineTo(x2, y2);
+      ctxC.strokeStyle = '#f59e0b'; ctxC.lineWidth = 3; ctxC.stroke();
+
+      // Outputs
+      document.getElementById('outTheta1').innerText = theta1 + "°";
+      document.getElementById('outTheta2').innerText = (theta2 * 180 / Math.PI).toFixed(1) + "°";
+    }
+
+    // Init Data & Loops
+    updatePendulumData();
+    drawPendulum();
+    drawCahaya();
+  </script>
+</body>
+</html>
